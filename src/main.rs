@@ -1,11 +1,12 @@
-use std::rc::Rc;
 use std::thread;
 use std::sync::mpsc::{channel, Sender, Receiver};
 use std::sync::{Arc, Mutex};
-type Task = dyn FnOnce() + Send;
+
+use std::time;
+type Task = Box<dyn FnOnce() + Send>;
 
 enum Message {
-	NewTask(Box<Task>),
+	NewTask(Task),
 	Terminate,
 }
 
@@ -77,10 +78,14 @@ fn main() {
 // 	thread.join().unwrap();
 	const THREADS : usize = 4;
 	let mut thread_pool = Threadpool::new(THREADS);
-	thread_pool.execute(move || {
-			println!("Hello, world!");
-		}
-	);
+	for _ in 0..16 {
+			thread_pool.execute(move || {
+				println!("Hello, world!");
+				thread::sleep(time::Duration::from_secs(1));
+			}
+		);
+
+	}
 }
 
 
